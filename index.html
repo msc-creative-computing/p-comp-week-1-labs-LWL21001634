@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+ <script src = "https://mimicproject.com/libs/nexusUI.js">
+</script>
+ <script src = "https://mimicproject.com/libs/maximilian.v.0.1.js">
+</script>
+<link href="https://fonts.googleapis.com/css?family=Staatliches" rel="stylesheet"/>  
+ <link rel="stylesheet" href="https://mimicproject.com/libs/maximilian-example.css" /> 
+   <div>
+    <div id="title">Maximilian.js DelayLine</div>
+    <div id="subtitle"></div>
+  <div><button id="playButton">Play</button></div>
+</div>
+<div id="oscilloscope"></div>
+<div id="spectrogram"></div>
+</head>
+<body>
+  
+  <!-- Maximilian code goes here -->
+  <script id = "myAudioScript1">
+    var sample1 = new Maximilian.maxiSample();/// 用Maximilian库中默认的maxisample的函数新创建一个sample
+    var sample2 = new Maximilian.maxiSample();/// 同上
+    
+    var osc = new Maximilian.maxiOsc();
+    var osc2 = new Maximilian.maxiOsc();
+    
+    sample1.setSample(this.getSampleBuffer('drumBreak'))
+    sample2.setSample(this.getSampleBuffer('ccciiBreak'))
+    
+    var phase = 1/(sample1.getLength()/44100);
+    var delay = new Maximilian.maxiDelayline();
+    
+    function play() 
+    {
+      var sig1 = 0;
+      var sig2 = 0;
+      if(sample1.isReady()) 
+      {
+        sig1 = delay.dl
+        (
+          sample1.playOnZX(osc.sinewave(phase) * 1.01),
+          8000, 0.4 // 8000为开场留白时间，0.4为频率调控
+  		)
+      }
+      if(sample2.isReady()) 
+      {
+        sig2 = delay.dl
+        (
+          sample2.playOnZX(osc.sinewave(phase) * 1.01),
+          8000, 0.4 // 8000为开场留白时间，0.4为频率调控
+        )
+      }
+      return (sig1 * 20 + sig2 * 20)
+    }
+ 
+</script>
+  
+ <!-- Main Javascript code goes here --> 
+  <script language="javascript">
+    let maxi;
+    initAudioEngine().then(async(dspEngine)=>{ 
+      maxi = dspEngine;
+      await maxi.addSample("drumBreak","drill.wav")
+      setup();
+      await maxi.addSample("ccciiBreak","cccii.wav")
+      setup();
+
+      //Get audio code from script element
+      maxi.setAudioCode("myAudioScript1");
+      
+    })
+
+    
+    ///////YOU CAN IGNORE ME - CODE FOR SCOPES///////
+    let setup = ()=> {
+      maxi.hush()
+      Nexus.context = maxi.audioWorkletNode.context;
+      new Nexus.Oscilloscope('oscilloscope', {'size': [400,100]}).connect(maxi.audioWorkletNode);
+      new Nexus.Spectrogram('spectrogram', {'size': [400,200]}).connect(maxi.audioWorkletNode);
+      const playButton = document.getElementById('playButton');   
+      let playAudio = () => {
+        playButton.innerHTML  = maxi.play() ? "STOP":"PLAY"
+      }
+      playButton.addEventListener("click", () => playAudio());
+    }
+    ///////////////////////////////////////////////
+ 
+</script>
+</body>
+</html>
